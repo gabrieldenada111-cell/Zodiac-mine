@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream> // Necessário para manipulação de arquivos (Gravação em disco)
 #include <vector>
 #include <string>
 #include <cstring>
@@ -26,6 +27,7 @@ struct FaixaIP {
 
 vector<string> servidores_descobertos;
 unsigned long long total_testado = 0;
+string caminho_salvamento = "/home/gabriel/Downloads/Zodiac_Servers_Achados.txt";
 
 void exibir_relatorio_final(int sinal) {
     cout << "\n\n" << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
@@ -41,19 +43,19 @@ void exibir_relatorio_final(int sinal) {
         for (const auto& ip_salvo : servidores_descobertos) {
             cout << VERDE << "    ➔ " << ip_salvo << RESET << endl;
         }
+        cout << AMARELO << "\n[*] O historico completo também foi salvo em: " << caminho_salvamento << RESET << endl;
     }
     cout << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
     exit(sinal); 
 }
 
-// Funcao que valida o protocolo com certeza absoluta
 bool validar_protocolo_minecraft(const string& ip, int porta, string& dados_retornados) {
     int telefon = socket(AF_INET, SOCK_STREAM, 0);
     if (telefon < 0) return false;
 
     struct timeval timeout;
     timeout.tv_sec = 0;
-    timeout.tv_usec = 350000; // 350ms garante leitura em redes residenciais
+    timeout.tv_usec = 350000; 
     setsockopt(telefon, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
     setsockopt(telefon, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
@@ -70,7 +72,6 @@ bool validar_protocolo_minecraft(const string& ip, int porta, string& dados_reto
     int resultado = connect(telefon, (struct sockaddr*)&ppt, sizeof(ppt));
     
     if (resultado >= 0) {
-        // Envia o pacote de Handshake + Request do protocolo moderno
         unsigned char packet[] = {
             0x0F, 0x00, 0x2F, 0x09, 'l', 'o', 'c', 'a', 'l', 'h', 'o', 's', 't', 0x63, 0xDD, 0x01,
             0x01, 0x00
@@ -90,7 +91,6 @@ bool validar_protocolo_minecraft(const string& ip, int porta, string& dados_reto
                 }
             }
             
-            // VALIDACAO ABSOLUTA: Procura por tags obrigatorias do JSON do Minecraft
             if (resposta.find("version") != string::npos || resposta.find("players") != string::npos || resposta.find("description") != string::npos) {
                 dados_retornados = resposta;
                 return true;
@@ -122,39 +122,21 @@ int main() {
     cout << VERDE << "              |_____|____|_|____|____|_|________|_____|" << RESET << endl;
     cout << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
 
-    // BANCO DE HOSTS (PORTAS) EXPANDIDO: As portas mais utilizadas no mundo de jogos
     vector<int> portas_alvo = {
-        25565, 25564, 25566, 25567, 25568, 25569, 25570, // Faixa principal Minecraft Java
-        25575, 25545, 25563, 25600, 25700, 25800,        // Portas alternativas de paineis compartilhados
-        10000, 10092, 10112, 10521, 11021,               // Faixas vistas no print do video
-        19132, 19133                                      // Portas padrao Minecraft Bedrock (Celular/Console)
+        25565, 25564, 25566, 25567, 25568, 25569, 25570, 
+        25575, 25545, 25563, 25600, 25700, 25800,        
+        10000, 10092, 10112, 10521, 11021,               
+        19132, 19133                                      
     };
 
-    // BANCO DE IPS EXPANDIDO: Data Centers + Maiores Provedores Residenciais do Brasil (Claro, Vivo, Oi, Tim, Brisanet)
     vector<FaixaIP> faixas_alvo = {
-        // --- DATA CENTERS E HOSPEDAGENS POPULARES ---
-        {"129.151", 0, 255},  // Oracle Cloud SP (Servidores Gratuitos)
-        {"144.22", 0, 255},   // Oracle Cloud Brasil
-        {"151.106", 0, 255},  // Hostinger VPS (Focada em servidores de blocos)
-        {"156.146", 32, 63},   // Proton VPN Free Nodes (EUA / Holanda)
-        {"37.120", 192, 223},  // Proton VPN / Datacamp
-        {"84.17", 32, 63},     // Proton / LeaseWeb Free
-        {"172.65", 0, 255},   // Proxies de protecao de servidores de jogos
-        {"54.233", 0, 255},   // AWS Cloud Sao Paulo
-        {"94.130", 0, 255},   // Hetzner (Hospedagem dedicada barata)
-        {"79.137", 0, 255},   // OVH Cloud (Maior hoster de servidores do mundo)
-        
-        // --- PROVEDORES RESIDENCIAIS BRASILEIROS (Onde jogadores abrem as portas na raca) ---
-        {"177.71", 0, 255},   // Operadoras de Fibra Regional / Brisanet / Algar
-        {"186.200", 0, 255},  // Internet Residencial BR (Sudeste)
-        {"179.182", 0, 255},  // Vivo Fibra Residencial 1
-        {"179.183", 0, 255},  // Vivo Fibra Residencial 2
-        {"186.212", 0, 255},  // Vivo Internet
-        {"200.229", 0, 255},  // Claro/NET Virtua Residencial 1
-        {"201.82", 0, 255},   // Claro/NET Virtua Residencial 2
-        {"177.38", 0, 255},   // Oi Velox / Oi Fibra
-        {"191.250", 0, 255},  // TIM Ultrafibra
-        {"187.19", 0, 255}    // Redes rotativas de operadoras nacionais
+        {"129.151", 0, 255}, {"144.22", 0, 255}, {"151.106", 0, 255}, 
+        {"156.146", 32, 63}, {"37.120", 192, 223}, {"84.17", 32, 63}, 
+        {"172.65", 0, 255},  {"54.233", 0, 255},  {"94.130", 0, 255}, 
+        {"79.137", 0, 255},  {"177.71", 0, 255},  {"186.200", 0, 255}, 
+        {"179.182", 0, 255}, {"179.183", 0, 255}, {"186.212", 0, 255}, 
+        {"200.229", 0, 255}, {"201.82", 0, 255},  {"177.38", 0, 255}, 
+        {"191.250", 0, 255}, {"187.19", 0, 255}
     };
 
     random_device rd;
@@ -163,17 +145,14 @@ int main() {
     uniform_int_distribution<> rodar_faixa(0, faixas_alvo.size() - 1);
     uniform_int_distribution<> octeto4(1, 254);
 
-    cout << CIANO << "\n[*] Zodiac Alpha-Hunter ativado com validacao absoluta de protocolo." << RESET << endl;
-    cout << AMARELO << "[*] Mapeando " << portas_alvo.size() << " portas em " << faixas_alvo.size() << " blocos estrategicos de rede." << RESET << endl;
-    cout << AMARELO << "[*] Pressione CTRL + C para encerrar e ver o relatorio final consolidado.\n" << RESET << endl;
+    cout << CIANO << "\n[*] Zodiac Alpha-Hunter + Auto-Save ativo em Downloads." << RESET << endl;
+    cout << AMARELO << "[*] Pressione CTRL + C para exibir o relatorio final consolidado.\n" << RESET << endl;
 
     while (true) {
         FaixaIP faixa = faixas_alvo[rodar_faixa(gen)];
         uniform_int_distribution<> octeto3(faixa.min_o3, faixa.max_o3);
-        
         string ip_atual = faixa.base + "." + to_string(octeto3(gen)) + "." + to_string(octeto4(gen));
 
-        // Executa todas as portas do banco no mesmo IP antes de trocar de alvo
         for (int porta_atual : portas_alvo) {
             total_testado++;
 
@@ -184,11 +163,19 @@ int main() {
             if (validar_protocolo_minecraft(ip_atual, porta_atual, dados_servidor)) {
                 string resultado_formatado = ip_atual + ":" + to_string(porta_atual);
                 
-                // Alerta Visual com o Emoji solicitado
+                // 1. Exibição com som e emoji na tela
                 cout << VERDE << NEGRITO << "\n\a[🔥 ZODIAC DETECTED ⚡] ➔ " << resultado_formatado << RESET << endl;
                 cout << CIANO << "   ➔ Protocolo Validado: " << AMARELO << dados_servidor << RESET << endl;
                 
+                // 2. Salva na memória para o relatório final
                 servidores_descobertos.push_back(resultado_formatado);
+
+                // 3. ROTINA DE AUTO-SAVE: Grava em tempo real no arquivo de texto (modo append)
+                ofstream arquivo_disco(caminho_salvamento, ios::app);
+                if (arquivo_disco.is_open()) {
+                    arquivo_disco << "[🔥] " << resultado_formatado << " -> " << dados_servidor << "\n";
+                    arquivo_disco.close();
+                }
             }
         }
     }
