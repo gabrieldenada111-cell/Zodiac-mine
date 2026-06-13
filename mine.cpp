@@ -55,7 +55,7 @@ bool validar_protocolo_minecraft(const string& ip, int porta, string& dados_reto
 
     struct timeval timeout;
     timeout.tv_sec = 0;
-    timeout.tv_usec = 350000; 
+    timeout.tv_usec = 450000; // AJUSTADO: 450ms para alcancar servidores internacionais sem fechar o pacote antes
     setsockopt(telefon, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
     setsockopt(telefon, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
@@ -129,7 +129,7 @@ int main() {
         19132, 19133                                      
     };
 
-       // FAIXAS ATUALIZADAS: Foco total em Data Centers Globais de Servidores de Jogos (Maior densidade de portas 25565 do mundo)
+    // FAIXAS ATUALIZADAS: Foco total em Data Centers Globais de Servidores de Jogos (Maior densidade de portas 25565 do mundo)
     vector<FaixaIP> faixas_alvo = {
         {"51.81", 0, 255},    // OVH América do Norte (A maior densidade de servidores de blocos do planeta)
         {"142.44", 0, 255},   // OVH Canadá (Onde a maioria das redes de amigos aluga servidores baratos)
@@ -140,7 +140,6 @@ int main() {
         {"66.70", 0, 255},    // Data Centers compartilhados de jogos (EUA)
         {"167.114", 0, 255}   // Redes dedicadas a servidores cooperativos de jogadores
     };
-
 
     random_device rd;
     mt19937 gen(rd());
@@ -156,6 +155,7 @@ int main() {
         uniform_int_distribution<> octeto3(faixa.min_o3, faixa.max_o3);
         string ip_atual = faixa.base + "." + to_string(octeto3(gen)) + "." + to_string(octeto4(gen));
 
+        // Executa todas as portas do bloco de hosts no mesmo IP antes de pular para o próximo target
         for (int porta_atual : portas_alvo) {
             total_testado++;
 
