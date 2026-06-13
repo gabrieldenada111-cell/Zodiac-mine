@@ -129,15 +129,18 @@ int main() {
         19132, 19133                                      
     };
 
+       // FAIXAS ATUALIZADAS: Foco total em Data Centers Globais de Servidores de Jogos (Maior densidade de portas 25565 do mundo)
     vector<FaixaIP> faixas_alvo = {
-        {"129.151", 0, 255}, {"144.22", 0, 255}, {"151.106", 0, 255}, 
-        {"156.146", 32, 63}, {"37.120", 192, 223}, {"84.17", 32, 63}, 
-        {"172.65", 0, 255},  {"54.233", 0, 255},  {"94.130", 0, 255}, 
-        {"79.137", 0, 255},  {"177.71", 0, 255},  {"186.200", 0, 255}, 
-        {"179.182", 0, 255}, {"179.183", 0, 255}, {"186.212", 0, 255}, 
-        {"200.229", 0, 255}, {"201.82", 0, 255},  {"177.38", 0, 255}, 
-        {"191.250", 0, 255}, {"187.19", 0, 255}
+        {"51.81", 0, 255},    // OVH América do Norte (A maior densidade de servidores de blocos do planeta)
+        {"142.44", 0, 255},   // OVH Canadá (Onde a maioria das redes de amigos aluga servidores baratos)
+        {"192.99", 0, 255},   // OVH Montreal
+        {"151.106", 0, 255},  // Hostinger VPS (Focada em servidores de jogos privados)
+        {"129.151", 0, 255},  // Oracle Cloud São Paulo (Faixa grátis muito usada no BR)
+        {"144.22", 0, 255},   // Oracle Cloud Brasil
+        {"66.70", 0, 255},    // Data Centers compartilhados de jogos (EUA)
+        {"167.114", 0, 255}   // Redes dedicadas a servidores cooperativos de jogadores
     };
+
 
     random_device rd;
     mt19937 gen(rd());
