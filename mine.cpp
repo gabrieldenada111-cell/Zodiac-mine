@@ -55,7 +55,7 @@ bool validar_protocolo_minecraft(const string& ip, int porta, string& dados_reto
 
     struct timeval timeout;
     timeout.tv_sec = 0;
-    timeout.tv_usec = 450000; // AJUSTADO: 450ms para alcancar servidores internacionais sem fechar o pacote antes
+    timeout.tv_usec = 450000; 
     setsockopt(telefon, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
     setsockopt(telefon, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
@@ -129,59 +129,93 @@ int main() {
         19132, 19133                                      
     };
 
-    // FAIXAS ATUALIZADAS: Foco total em Data Centers Globais de Servidores de Jogos (Maior densidade de portas 25565 do mundo)
     vector<FaixaIP> faixas_alvo = {
-        {"51.81", 0, 255},    // OVH América do Norte (A maior densidade de servidores de blocos do planeta)
-        {"142.44", 0, 255},   // OVH Canadá (Onde a maioria das redes de amigos aluga servidores baratos)
-        {"192.99", 0, 255},   // OVH Montreal
-        {"151.106", 0, 255},  // Hostinger VPS (Focada em servidores de jogos privados)
-        {"129.151", 0, 255},  // Oracle Cloud São Paulo (Faixa grátis muito usada no BR)
-        {"144.22", 0, 255},   // Oracle Cloud Brasil
-        {"66.70", 0, 255},    // Data Centers compartilhados de jogos (EUA)
-        {"167.114", 0, 255}   // Redes dedicadas a servidores cooperativos de jogadores
+        {"51.81", 0, 255}, {"142.44", 0, 255}, {"192.99", 0, 255}, {"151.106", 0, 255},
+        {"129.151", 0, 255}, {"144.22", 0, 255}, {"66.70", 0, 255}, {"167.114", 0, 255}
     };
+
+    // Passo 3: Escolha do Modo de Operação
+    cout << VERDE << NEGRITO << "\n[>] PASSO 3: MODO DE ESCOPO" << RESET << endl;
+    cout << "    [1] Modo Automatico (Varre as empresas da lista de forma aleatoria)" << endl;
+    cout << "    [2] Modo Escolher Faixa (Voce digita de onde comeca e onde termina)" << endl;
+    cout << "    Escolha uma opcao: " << AMARELO;
+    int modo_escolhido;
+    cin >> modo_escolhido;
+    cout << RESET;
+
+    int bloco_inicio = 167;
+    int bloco_fim = 51;
+    bool usar_modo_escolhido = false;
+
+    if (modo_escolhido == 2) {
+        usar_modo_escolhido = true;
+        cout << "\n    " << CIANO << "[+]" << RESET << " Digite o bloco para comecar (Ex: 167): " << AMARELO;
+        cin >> bloco_inicio;
+        cout << "    " << CIANO << "[+]" << RESET << " Digite o bloco para terminar (Ex: 51): " << AMARELO;
+        cin >> bloco_fim;
+        cout << RESET;
+    }
 
     random_device rd;
     mt19937 gen(rd());
-    
     uniform_int_distribution<> rodar_faixa(0, faixas_alvo.size() - 1);
-    uniform_int_distribution<> octeto4(1, 254);
+    uniform_int_distribution<> aleatorio(1, 254);
 
-    cout << CIANO << "\n[*] Zodiac Alpha-Hunter + Auto-Save ativo em Downloads." << RESET << endl;
-    cout << AMARELO << "[*] Pressione CTRL + C para exibir o relatorio final consolidado.\n" << RESET << endl;
+    cout << CIANO << "\n[*] Zodiac Alpha-Hunter rodando. Pressione CTRL + C para ver o relatorio final.\n" << RESET << endl;
 
-    while (true) {
-        FaixaIP faixa = faixas_alvo[rodar_faixa(gen)];
-        uniform_int_distribution<> octeto3(faixa.min_o3, faixa.max_o3);
-        string ip_atual = faixa.base + "." + to_string(octeto3(gen)) + "." + to_string(octeto4(gen));
+    // EXECUÇÃO DO MODO SELECIONADO
+    if (usar_modo_escolhido) {
+        int direcao = (bloco_inicio <= bloco_fim) ? 1 : -1;
+        
+        for (int o1 = bloco_inicio; o1 != bloco_fim + direcao; o1 += direcao) {
+            for (int o2 = 1; o2 <= 254; ++o2) {
+                for (int o3 = 0; o3 <= 255; ++o3) {
+                    for (int o4 = 1; o4 <= 254; ++o4) {
+                        
+                        string ip_atual = to_string(o1) + "." + to_string(o2) + "." + to_string(o3) + "." + to_string(o4);
 
-        // Executa todas as portas do bloco de hosts no mesmo IP antes de pular para o próximo target
-        for (int porta_atual : portas_alvo) {
-            total_testado++;
+                        for (int porta_atual : portas_alvo) {
+                            total_testado++;
 
-            cout << AMARELO << "[ ZODIAC ALPHA ] ➔ " << ip_atual << ":" << porta_atual 
-                 << " | Varreduras: " << total_testado << "\r" << flush;
+                            cout << AMARELO << "[ ZODIAC FAIXA ] ➔ " << ip_atual << ":" << porta_atual 
+                                 << " | Varreduras: " << total_testado << "\r" << flush;
 
-            string dados_servidor = "";
-            if (validar_protocolo_minecraft(ip_atual, porta_atual, dados_servidor)) {
-                string resultado_formatado = ip_atual + ":" + to_string(porta_atual);
-                
-                // 1. Exibição com som e emoji na tela
-                cout << VERDE << NEGRITO << "\n\a[🔥 ZODIAC DETECTED ⚡] ➔ " << resultado_formatado << RESET << endl;
-                cout << CIANO << "   ➔ Protocolo Validado: " << AMARELO << dados_servidor << RESET << endl;
-                
-                // 2. Salva na memória para o relatório final
-                servidores_descobertos.push_back(resultado_formatado);
+                            string dados_servidor = "";
+                            if (validar_protocolo_minecraft(ip_atual, porta_atual, dados_servidor)) {
+                                string resultado_formatado = ip_atual + ":" + to_string(porta_atual);
+                                
+                                cout << VERDE << NEGRITO << "\n\a[🔥 ZODIAC DETECTED ⚡] ➔ " << resultado_formatado << RESET << endl;
+                                cout << CIANO << "   ➔ Protocolo Validado: " << AMARELO << dados_servidor << RESET << endl;
+                                
+                                servidores_descobertos.push_back(resultado_formatado);
 
-                // 3. ROTINA DE AUTO-SAVE: Grava em tempo real no arquivo de texto (modo append)
-                ofstream arquivo_disco(caminho_salvamento, ios::app);
-                if (arquivo_disco.is_open()) {
-                    arquivo_disco << "[🔥] " << resultado_formatado << " -> " << dados_servidor << "\n";
-                    arquivo_disco.close();
+                                ofstream arquivo_disco(caminho_salvamento, ios::app);
+                                if (arquivo_disco.is_open()) {
+                                    arquivo_disco << "[🔥] " << resultado_formatado << " -> " << dados_servidor << "\n";
+                                    arquivo_disco.close();
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-    }
+    } else {
+        // MODO AUTOMÁTICO RECONSTRUÍDO E FECHADO
+        while (true) {
+            FaixaIP faixa = faixas_alvo[rodar_faixa(gen)];
+            uniform_int_distribution<> octeto3(faixa.min_o3, faixa.max_o3);
+            string ip_atual = faixa.base + "." + to_string(octeto3(gen)) + "." + to_string(aleatorio(gen));
 
-    return 0;
-}
+            for (int porta_atual : portas_alvo) {
+                total_testado++;
+
+                cout << AMARELO << "[ ZODIAC AUTO ] ➔ " << ip_atual << ":" << porta_atual 
+                     << " | Varreduras: " << total_testado << "\r" << flush;
+
+                string dados_servidor = "";
+                if (validar_protocolo_minecraft(ip_atual, porta_atual, dados_servidor)) {
+                    string resultado_formatado = ip_atual + ":" + to_string(porta_atual);
+                    
+                    cout << VERDE << NEGRITO << "\n\a[🔥 ZODIAC DETECTED ⚡] ➔ " << resultado_formatado << RESET << endl;
+cout << CIANO << "   ➔ Protocolo Validado: " << AMARELO << dados_servidor << RESET << endl;servidores_descobertos.push_back(resultado_formatado);ofstream arquivo_disco(caminho_salvamento, ios::app);if (arquivo_disco.is_open()) {arquivo_disco << "[🔥] " << resultado_formatado << " -> " << dados_servidor << "\n";arquivo_disco.close();}}}}}return 0;}
